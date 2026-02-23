@@ -17,21 +17,37 @@ jobs:
 
       - name: Start Zuul App in Background
         run: |
+          # Run bootRun and redirect all output to a file so we can debug later
           ./gradlew :zuul-simple-webapp:bootRun \
-            -x licenseFormat -x licenseCheck -x licenseMain -x licenseTest &
-          echo "Waiting for app to start..."
-          sleep 30 # Give the app a moment to initialize
+            -x licenseFormat -x licenseCheck -x licenseMain -x licenseTest > app_logs.txt 2>&1 &
+          
+          echo "Waiting for Zuul to bind to port 8080..."
+          # Loop for up to 5 minutes checking if port 8080 is active
+          for i in {1..30}; do
+            if nc -z localhost 8080; then
+              echo "Zuul is UP on port 8080!"
+              exit 0
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 10
+          done
+          echo "ERROR: Zuul failed to start in time. Check app_logs.txt"
+          cat app_logs.txt
+          exit 1
 
       - name: Start Pinggy Tunnel
         run: |
-          # This starts the tunnel and logs the URL to the console
+          # Start the tunnel and log output
           ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 \
-            -R0:localhost:8080 free.pinggy.io > pinggy_url.txt 2>&1 &
+            -R0:localhost:8080 free.pinggy.io > pinggy_output.txt 2>&1 &
           
-          # Give it a second to generate the URL, then print it
-          sleep 5
-          grep -o 'https://[^ ]*' pinggy_url.txt || echo "Check the logs below for the URL"
-          cat pinggy_url.txt
+          sleep 10
+          echo "--- TUNNEL URL ---"
+          grep -o 'https://[^ ]*' pinggy_output.txt || echo "URL not found in logs"
+          cat pinggy_output.txt
+          echo "------------------"
+
+          
 
       - name: Keep Alive for 2 Hours
         run: |
