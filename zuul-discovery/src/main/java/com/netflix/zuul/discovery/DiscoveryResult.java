@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
  * <p>
  * Wraps a single instance of discovery enabled server, and stats related to it.
  */
+@SuppressWarnings("PatternMatchingInstanceof")
 public final class DiscoveryResult implements ResolverResult {
 
     private final Server server;
@@ -86,7 +87,8 @@ public final class DiscoveryResult implements ResolverResult {
         if (this.equals(DiscoveryResult.EMPTY)) {
             return Optional.empty();
         }
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             if (des.getInstanceInfo() != null) {
                 String ip = des.getInstanceInfo().getIPAddr();
                 if (ip != null && !ip.isEmpty()) {
@@ -114,21 +116,24 @@ public final class DiscoveryResult implements ResolverResult {
     }
 
     public int getSecurePort() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             return des.getInstanceInfo().getSecurePort();
         }
         return -1;
     }
 
     public boolean isSecurePortEnabled() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             return des.getInstanceInfo().isPortEnabled(PortType.SECURE);
         }
         return false;
     }
 
     public String getTarget() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             InstanceInfo instanceInfo = des.getInstanceInfo();
             if (server.getPort() == instanceInfo.getSecurePort()) {
                 return instanceInfo.getSecureVipAddress();
@@ -145,9 +150,11 @@ public final class DiscoveryResult implements ResolverResult {
 
     @Nullable
     public String getAvailabilityZone() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             InstanceInfo instanceInfo = des.getInstanceInfo();
-            if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo amazonInfo) {
+            if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo) {
+                AmazonInfo amazonInfo = (AmazonInfo) instanceInfo.getDataCenterInfo();
                 return amazonInfo.getMetadata().get("availability-zone");
             }
         }
@@ -159,7 +166,8 @@ public final class DiscoveryResult implements ResolverResult {
     }
 
     public String getServerId() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             return des.getInstanceInfo().getId();
         }
         return server.getId();
@@ -175,14 +183,16 @@ public final class DiscoveryResult implements ResolverResult {
     }
 
     public String getASGName() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             return des.getInstanceInfo().getASGName();
         }
         return null;
     }
 
     public String getAppName() {
-        if (server instanceof DiscoveryEnabledServer des) {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
             return des.getInstanceInfo().getAppName().toLowerCase(Locale.ROOT);
         }
         return "unknown";
