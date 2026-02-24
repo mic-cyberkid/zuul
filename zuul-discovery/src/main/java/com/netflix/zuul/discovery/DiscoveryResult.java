@@ -93,6 +93,7 @@ public final class DiscoveryResult implements ResolverResult {
                     return Optional.of(ip);
                 }
             }
+            return Optional.empty();
         }
         return Optional.ofNullable(server.getHost());
     }
