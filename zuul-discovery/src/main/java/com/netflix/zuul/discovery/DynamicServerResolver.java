@@ -78,7 +78,7 @@ public class DynamicServerResolver implements Resolver<DiscoveryResult> {
     public DiscoveryResult resolve(@Nullable Object key) {
         Server server = loadBalancer.chooseServer(key);
         return server != null
-                ? new DiscoveryResult((DiscoveryEnabledServer) server, loadBalancer.getLoadBalancerStats())
+                ? new DiscoveryResult(server, loadBalancer.getLoadBalancerStats())
                 : DiscoveryResult.EMPTY;
     }
 
@@ -121,7 +121,7 @@ public class DynamicServerResolver implements Resolver<DiscoveryResult> {
         Set<Server> newSet = new HashSet<>(newList);
         List<DiscoveryResult> discoveryResults = Sets.difference(oldSet, newSet).stream()
                 .map(server ->
-                        new DiscoveryResult((DiscoveryEnabledServer) server, loadBalancer.getLoadBalancerStats()))
+                        new DiscoveryResult(server, loadBalancer.getLoadBalancerStats()))
                 .collect(Collectors.toList());
         listener.onChange(discoveryResults);
     }
