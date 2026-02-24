@@ -21,6 +21,7 @@ import com.netflix.appinfo.AmazonInfo;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.InstanceInfo.PortType;
 import com.netflix.loadbalancer.LoadBalancerStats;
+import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerStats;
 import com.netflix.niws.loadbalancer.DiscoveryEnabledServer;
 import java.util.Locale;
@@ -85,8 +86,7 @@ public final class DiscoveryResult implements ResolverResult {
         if (this.equals(DiscoveryResult.EMPTY)) {
             return Optional.empty();
         }
-        if (server instanceof DiscoveryEnabledServer) {
-            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
+        if (server instanceof DiscoveryEnabledServer des) {
             if (des.getInstanceInfo() != null) {
                 String ip = des.getInstanceInfo().getIPAddr();
                 if (ip != null && !ip.isEmpty()) {
@@ -113,22 +113,21 @@ public final class DiscoveryResult implements ResolverResult {
     }
 
     public int getSecurePort() {
-        if (server instanceof DiscoveryEnabledServer) {
-            return ((DiscoveryEnabledServer) server).getInstanceInfo().getSecurePort();
+        if (server instanceof DiscoveryEnabledServer des) {
+            return des.getInstanceInfo().getSecurePort();
         }
         return -1;
     }
 
     public boolean isSecurePortEnabled() {
-        if (server instanceof DiscoveryEnabledServer) {
-            return ((DiscoveryEnabledServer) server).getInstanceInfo().isPortEnabled(PortType.SECURE);
+        if (server instanceof DiscoveryEnabledServer des) {
+            return des.getInstanceInfo().isPortEnabled(PortType.SECURE);
         }
         return false;
     }
 
     public String getTarget() {
-        if (server instanceof DiscoveryEnabledServer) {
-            DiscoveryEnabledServer des = (DiscoveryEnabledServer) server;
+        if (server instanceof DiscoveryEnabledServer des) {
             InstanceInfo instanceInfo = des.getInstanceInfo();
             if (server.getPort() == instanceInfo.getSecurePort()) {
                 return instanceInfo.getSecureVipAddress();
@@ -145,10 +144,10 @@ public final class DiscoveryResult implements ResolverResult {
 
     @Nullable
     public String getAvailabilityZone() {
-        if (server instanceof DiscoveryEnabledServer) {
-            InstanceInfo instanceInfo = ((DiscoveryEnabledServer) server).getInstanceInfo();
-            if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo) {
-                return ((AmazonInfo) instanceInfo.getDataCenterInfo()).getMetadata().get("availability-zone");
+        if (server instanceof DiscoveryEnabledServer des) {
+            InstanceInfo instanceInfo = des.getInstanceInfo();
+            if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo amazonInfo) {
+                return amazonInfo.getMetadata().get("availability-zone");
             }
         }
         return null;
@@ -159,8 +158,8 @@ public final class DiscoveryResult implements ResolverResult {
     }
 
     public String getServerId() {
-        if (server instanceof DiscoveryEnabledServer) {
-            return ((DiscoveryEnabledServer) server).getInstanceInfo().getId();
+        if (server instanceof DiscoveryEnabledServer des) {
+            return des.getInstanceInfo().getId();
         }
         return server.getId();
     }
@@ -175,15 +174,15 @@ public final class DiscoveryResult implements ResolverResult {
     }
 
     public String getASGName() {
-        if (server instanceof DiscoveryEnabledServer) {
-            return ((DiscoveryEnabledServer) server).getInstanceInfo().getASGName();
+        if (server instanceof DiscoveryEnabledServer des) {
+            return des.getInstanceInfo().getASGName();
         }
         return null;
     }
 
     public String getAppName() {
-        if (server instanceof DiscoveryEnabledServer) {
-            return ((DiscoveryEnabledServer) server).getInstanceInfo().getAppName().toLowerCase(Locale.ROOT);
+        if (server instanceof DiscoveryEnabledServer des) {
+            return des.getInstanceInfo().getAppName().toLowerCase(Locale.ROOT);
         }
         return "unknown";
     }
