@@ -41,11 +41,10 @@ public class BypassFilter extends HttpInboundSyncFilter {
     @Override
     public HttpRequestMessage apply(HttpRequestMessage request) {
         String path = request.getPath();
-        String vip = request.getContext().getRouteVIP();
 
-        // Simulate a security filter that only looks at the VIP or raw path
-        // BUT it doesn't account for encoded dots in the path
-        if ("admin".equals(vip) || path.startsWith("/admin")) {
+        // Weak path check: only blocks if it starts with /admin in the RAW path
+        // Vulnerable to: /public/%2e%2e/admin/secrets
+        if (path.startsWith("/admin")) {
             // Block access with 403 Forbidden
             HttpResponseMessage response = new HttpResponseMessageImpl(request.getContext(), request, HttpResponseStatus.FORBIDDEN.code());
             response.setBodyAsText("Access Denied by BypassFilter");

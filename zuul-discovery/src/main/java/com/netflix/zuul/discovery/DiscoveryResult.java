@@ -173,7 +173,20 @@ public final class DiscoveryResult implements ResolverResult {
         return server.getId();
     }
 
-    public Server getServer() {
+    /**
+     * @return the underlying server instance.
+     * Note: This method returns DiscoveryEnabledServer for backward compatibility.
+     * If the underlying server is not a DiscoveryEnabledServer, it returns null.
+     * Use {@link #getRawServer()} to get the generic Server instance.
+     */
+    public DiscoveryEnabledServer getServer() {
+        return (server instanceof DiscoveryEnabledServer) ? (DiscoveryEnabledServer) server : null;
+    }
+
+    /**
+     * @return the generic Ribbon Server instance.
+     */
+    public Server getRawServer() {
         return server;
     }
 
