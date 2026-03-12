@@ -21,6 +21,7 @@ import com.netflix.appinfo.AmazonInfo;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.InstanceInfo.PortType;
 import com.netflix.loadbalancer.LoadBalancerStats;
+import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerStats;
 import com.netflix.niws.loadbalancer.DiscoveryEnabledServer;
 import java.util.Locale;
@@ -36,7 +37,7 @@ import javax.annotation.Nullable;
  */
 public final class DiscoveryResult implements ResolverResult {
 
-    private final DiscoveryEnabledServer server;
+    private final Server server;
     private final ServerStats serverStats;
     /**
      * This exists to allow for a semblance of type safety, and encourages avoiding null checks on the underlying Server,
@@ -50,7 +51,7 @@ public final class DiscoveryResult implements ResolverResult {
                     .build(),
             false);
 
-    public DiscoveryResult(DiscoveryEnabledServer server, LoadBalancerStats lbStats) {
+    public DiscoveryResult(Server server, LoadBalancerStats lbStats) {
         this.server = server;
         Objects.requireNonNull(lbStats, "Loadbalancer stats must be a valid instance");
         this.serverStats = lbStats.getSingleServerStat(server);
@@ -60,7 +61,7 @@ public final class DiscoveryResult implements ResolverResult {
      * This solely exists to create a result object from incomplete InstanceInfo.
      * Usage of this for production code is strongly discouraged, since the underlying instances are prone to memory leaks
      */
-    public DiscoveryResult(DiscoveryEnabledServer server) {
+    public DiscoveryResult(Server server) {
         this.server = server;
         this.serverStats = new ServerStats() {
             @Override
@@ -81,16 +82,19 @@ public final class DiscoveryResult implements ResolverResult {
         return new DiscoveryResult(server);
     }
 
+    @SuppressWarnings("PatternMatchingInstanceof")
     public Optional<String> getIPAddr() {
         if (this.equals(DiscoveryResult.EMPTY)) {
             return Optional.empty();
         }
-        if (server.getInstanceInfo() != null) {
-            String ip = server.getInstanceInfo().getIPAddr();
-            if (ip != null && !ip.isEmpty()) {
-                return Optional.of(ip);
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer discoveryEnabledServer = (DiscoveryEnabledServer) server;
+            if (discoveryEnabledServer.getInstanceInfo() != null) {
+                String ip = discoveryEnabledServer.getInstanceInfo().getIPAddr();
+                if (ip != null && !ip.isEmpty()) {
+                    return Optional.of(ip);
+                }
             }
-            return Optional.empty();
         }
         return Optional.empty();
     }
@@ -102,7 +106,7 @@ public final class DiscoveryResult implements ResolverResult {
 
     @Override
     public boolean isDiscoveryEnabled() {
-        return server != null;
+        return server instanceof DiscoveryEnabledServer;
     }
 
     @Override
@@ -110,32 +114,49 @@ public final class DiscoveryResult implements ResolverResult {
         return server == null ? -1 : server.getPort();
     }
 
+    @SuppressWarnings("PatternMatchingInstanceof")
     public int getSecurePort() {
-        return server.getInstanceInfo().getSecurePort();
-    }
-
-    public boolean isSecurePortEnabled() {
-        return server.getInstanceInfo().isPortEnabled(PortType.SECURE);
-    }
-
-    public String getTarget() {
-        InstanceInfo instanceInfo = server.getInstanceInfo();
-        if (server.getPort() == instanceInfo.getSecurePort()) {
-            return instanceInfo.getSecureVipAddress();
-        } else {
-            return instanceInfo.getVIPAddress();
+        if (server instanceof DiscoveryEnabledServer) {
+            return ((DiscoveryEnabledServer) server).getInstanceInfo().getSecurePort();
         }
+        return -1;
+    }
+
+    @SuppressWarnings("PatternMatchingInstanceof")
+    public boolean isSecurePortEnabled() {
+        if (server instanceof DiscoveryEnabledServer) {
+            return ((DiscoveryEnabledServer) server).getInstanceInfo().isPortEnabled(PortType.SECURE);
+        }
+        return false;
+    }
+
+    @SuppressWarnings("PatternMatchingInstanceof")
+    public String getTarget() {
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer discoveryEnabledServer = (DiscoveryEnabledServer) server;
+            InstanceInfo instanceInfo = discoveryEnabledServer.getInstanceInfo();
+            if (server.getPort() == instanceInfo.getSecurePort()) {
+                return instanceInfo.getSecureVipAddress();
+            } else {
+                return instanceInfo.getVIPAddress();
+            }
+        }
+        return server.getHost();
     }
 
     public SimpleMetaInfo getMetaInfo() {
         return new SimpleMetaInfo(server.getMetaInfo());
     }
 
+    @SuppressWarnings("PatternMatchingInstanceof")
     @Nullable
     public String getAvailabilityZone() {
-        InstanceInfo instanceInfo = server.getInstanceInfo();
-        if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo) {
-            return ((AmazonInfo) instanceInfo.getDataCenterInfo()).getMetadata().get("availability-zone");
+        if (server instanceof DiscoveryEnabledServer) {
+            DiscoveryEnabledServer discoveryEnabledServer = (DiscoveryEnabledServer) server;
+            InstanceInfo instanceInfo = discoveryEnabledServer.getInstanceInfo();
+            if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo) {
+                return ((AmazonInfo) instanceInfo.getDataCenterInfo()).getMetadata().get("availability-zone");
+            }
         }
         return null;
     }
@@ -144,11 +165,15 @@ public final class DiscoveryResult implements ResolverResult {
         return server.getZone();
     }
 
+    @SuppressWarnings("PatternMatchingInstanceof")
     public String getServerId() {
-        return server.getInstanceInfo().getId();
+        if (server instanceof DiscoveryEnabledServer) {
+            return ((DiscoveryEnabledServer) server).getInstanceInfo().getId();
+        }
+        return server.getId();
     }
 
-    public DiscoveryEnabledServer getServer() {
+    public Server getServer() {
         return server;
     }
 
@@ -157,12 +182,20 @@ public final class DiscoveryResult implements ResolverResult {
         return this.serverStats;
     }
 
+    @SuppressWarnings("PatternMatchingInstanceof")
     public String getASGName() {
-        return server.getInstanceInfo().getASGName();
+        if (server instanceof DiscoveryEnabledServer) {
+            return ((DiscoveryEnabledServer) server).getInstanceInfo().getASGName();
+        }
+        return null;
     }
 
+    @SuppressWarnings("PatternMatchingInstanceof")
     public String getAppName() {
-        return server.getInstanceInfo().getAppName().toLowerCase(Locale.ROOT);
+        if (server instanceof DiscoveryEnabledServer) {
+            return ((DiscoveryEnabledServer) server).getInstanceInfo().getAppName().toLowerCase(Locale.ROOT);
+        }
+        return "unknown";
     }
 
     public void noteResponseTime(double msecs) {
