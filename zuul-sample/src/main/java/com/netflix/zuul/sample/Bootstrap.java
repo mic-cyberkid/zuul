@@ -37,6 +37,7 @@ import com.netflix.zuul.netty.server.push.PushConnectionRegistry;
 import com.netflix.zuul.origins.BasicNettyOriginManager;
 import com.netflix.zuul.sample.filters.Debug;
 import com.netflix.zuul.sample.filters.endpoint.Healthcheck;
+import com.netflix.zuul.sample.filters.inbound.BypassFilter;
 import com.netflix.zuul.sample.filters.inbound.DebugRequest;
 import com.netflix.zuul.sample.filters.inbound.Routes;
 import com.netflix.zuul.sample.filters.inbound.SampleServiceFilter;
@@ -70,6 +71,7 @@ public class Bootstrap {
         classes.add(SampleServiceFilter.class);
         classes.add(ZuulResponseFilter.class);
         classes.add(DebugRequest.class);
+        classes.add(BypassFilter.class);
 
         FILTER_TYPES = Collections.unmodifiableSet(classes);
     }
