@@ -48,9 +48,12 @@ public class Routes extends HttpInboundSyncFilter {
         // Route healthchecks to the healthcheck endpoint.
         if (path.equalsIgnoreCase("/healthcheck")) {
             context.setEndpoint(Healthcheck.class.getCanonicalName());
+        } else if (path.startsWith("/admin")) {
+            context.setEndpoint(ProxyEndpoint.class.getCanonicalName());
+            context.setRouteVIP("admin");
         } else {
             context.setEndpoint(ProxyEndpoint.class.getCanonicalName());
-            context.setRouteVIP("api");
+            context.setRouteVIP("public");
         }
 
         return request;
